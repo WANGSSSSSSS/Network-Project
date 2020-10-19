@@ -21,7 +21,7 @@ void receive_tcp(SOCKET sockConn) {
 	{
 		string str;
 		char buffer[100];
-		recv(sockConn, buffer, strlen(buffer), 0);
+		recv(sockConn, buffer, 99, 0);
 		if (string(buffer) == "q"||closed) {
 			closed = true;
 			break;
@@ -65,13 +65,13 @@ void receive_udp(SOCKET sockSrv) {
 		SOCKADDR_IN addrClt;
 		int len = sizeof(addrClt);
 		in_addr in;
-		recvfrom(sockSrv, buffer, strlen(buffer), 0, (sockaddr*)&addrClt, &len);
+		recvfrom(sockSrv, buffer, 99, 0, (sockaddr*)&addrClt, &len);
 
 		{
 			std::lock_guard<std::mutex> lock(buffer_mutex);
 			string str(buffer);
 			if (str == "q") closed = true;
-			
+
 			//print client ip
 			memcpy(&in, &addrClt.sin_addr.s_addr, 4);
 			cout << "message from: "<<inet_ntoa(in)<<endl;

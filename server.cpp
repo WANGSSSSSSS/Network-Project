@@ -71,10 +71,12 @@ void receive_udp(SOCKET sockSrv) {
 			std::lock_guard<std::mutex> lock(buffer_mutex);
 			string str(buffer);
 			if (str == "q") closed = true;
-			cout << "recv:" << str << endl;
-			memcpy(&in, &addrClt.sin_addr.s_addr, 4);
-			cout << inet_ntoa(in)<<endl;
 			
+			//print client ip
+			memcpy(&in, &addrClt.sin_addr.s_addr, 4);
+			cout << "message from: "<<inet_ntoa(in)<<endl;
+
+			cout << "recv:" << str << endl;
 		}
 	}
 }
@@ -101,14 +103,14 @@ int main(int argc, char* argv[])
 	int		err;
 	SOCKET sockSrv;
 	wVersionRequested = MAKEWORD(2, 2);//create 16bit data
-	//(1)Load WinSock
+	//Load WinSock
 	err = WSAStartup(wVersionRequested, &wsaData);	//load win socket
 	if (err != 0)
 	{
 		cout << "Load WinSock Failed!";
 		return -1;
 	}
-	//(2)create socket
+	//create socket
 	if (USE_TCP) {
 		sockSrv = socket(AF_INET, SOCK_STREAM, 0);
 	}
@@ -119,12 +121,12 @@ int main(int argc, char* argv[])
 		cout << "socket() fail:" << WSAGetLastError() << endl;
 		return -2;
 	}
-	//(3)server IP
+	//server IP
 	SOCKADDR_IN addrSrv;
 	addrSrv.sin_family = AF_INET;
 	addrSrv.sin_addr.s_addr = inet_addr(SRV_IP);
 	addrSrv.sin_port = htons(DEFAULT_PORT);
-	//(4)bind
+	//bind
 	err = bind(sockSrv, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR));
 	if (err != 0)
 	{
@@ -133,7 +135,7 @@ int main(int argc, char* argv[])
 		return -3;
 	}
 	if (USE_TCP) {
-		//(5)listen
+		//listen
 		err = listen(sockSrv, 5);
 		if (err != 0)
 		{
@@ -142,16 +144,16 @@ int main(int argc, char* argv[])
 			return -4;
 		}
 		cout << "Server waitting...:" << endl;
-		//(6)client ip
+		//client ip
 		SOCKADDR_IN addrClt;
 		int len = sizeof(SOCKADDR);
 
 
-		//(7)accept
+		//accept
 		SOCKET sockConn = accept(sockSrv, (SOCKADDR*)&addrClt, &len);
-		char sendBuf[1024];
-		sprintf_s(sendBuf, "Connect Success");
-		//(8)send recv
+		cout << "Connected" << endl;
+
+		//send recv
 		std::thread send_t = std::thread(send_tcp, sockConn);
 		std::thread rcv = std::thread(receive_tcp, sockConn);
 
@@ -159,11 +161,13 @@ int main(int argc, char* argv[])
 		rcv.join();
 
 
-		//(9)close connected sock
+		//close connected sock
 		closesocket(sockConn);
 	}
 	else
 	{
+		//client ip
+		cout << "UDP connetion" << endl;
 		SOCKADDR_IN addrClt;
 		addrClt.sin_family = AF_INET;
 		addrClt.sin_port = htons(DEFAULT_PORT);
@@ -175,9 +179,9 @@ int main(int argc, char* argv[])
 		send_t.join();
 		rcv.join();
 	}
-	//(10)close server sock
+	//close server sock
 	closesocket(sockSrv);
-	//(11)clean up winsock
+	//clean up winsock
 	WSACleanup();
 	return 0;
 }
